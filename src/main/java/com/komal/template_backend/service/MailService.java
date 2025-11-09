@@ -46,5 +46,26 @@ public class MailService {
                 throw s;
             }
         }
+    public  void sendDonationReceipt(String toEmail, String donorName, double amount, String paymentId) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject("Thank You for Your Donation ❤️");
+
+        String body = String.format(
+                "Dear %s,\n\nThank you for your generous donation to Feed The Hunger Foundation!\n\n" +
+                        "Donation Details:\n" +
+                        "--------------------------------\n" +
+                        "Amount: ₹%.2f\n" +
+                        "Payment ID: %s\n" +
+                        "Date: %s\n" +
+                        "--------------------------------\n\n" +
+                        "Your support helps us feed more families in need.\n\n" +
+                        "With gratitude,\nFeed The Hunger Foundation",
+                donorName, amount, paymentId, java.time.LocalDateTime.now()
+        );
+
+        message.setText(body);
+        mailSender.send(message);
+    }
 }
 
