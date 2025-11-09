@@ -50,8 +50,7 @@ public class DonorsFilteration {
 
                 .filter(d -> params.get("uniqueId") == null ||
                         d.getUniqueId().contains(params.get("uniqueId")))
-                .filter(d -> params.get("address") == null ||
-                        d.getAddress().toLowerCase().contains(params.get("address").toLowerCase()))
+
 
                 // Donation info
                 .filter(d -> matchesIgnoreCaseTrimmed(d.getPaymentMode(), params.get("paymentMode")))
