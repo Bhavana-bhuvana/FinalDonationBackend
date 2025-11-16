@@ -239,6 +239,9 @@ public class Donourentity {
     public boolean getDeclaration() {
         return declaration;
     }
+public boolean isDeclaration() {
+    return declaration;
+}
 
     public void setDeclaration(boolean declaration) {
         this.declaration = declaration;
