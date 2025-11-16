@@ -198,7 +198,7 @@ public class Donourentity {
     private String paymentId;
     private String orderId;
     private String status;
-    private String declaration;
+    private boolean declaration;
 
     public String getWallet() {
         return wallet;
@@ -236,11 +236,11 @@ public class Donourentity {
     }
 
     private String PaymentMethod;
-    public String getDeclaration() {
+    public boolean getDeclaration() {
         return declaration;
     }
 
-    public void setDeclaration(String declaration) {
+    public void setDeclaration(boolean declaration) {
         this.declaration = declaration;
     }
 
