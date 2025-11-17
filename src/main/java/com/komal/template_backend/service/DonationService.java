@@ -31,34 +31,85 @@ public class DonationService {
 
 
         // 🔍 Check if this donor already exists (update case)
-        Donourentity existing = donationRepo.findByOrderId(donor.getOrderId()).orElse(null);
+        // Donourentity existing = donationRepo.findByOrderId(donor.getOrderId()).orElse(null);
+
+        // if (existing != null) {
+        //     System.out.println("🟡 Updating existing donor — skipping re-encryption");
+        //     SecretKeySpec key = AESUtil.deobfuscateKey(donor.getEncKey());
+
+        //     // just update payment info and status
+        //     existing.setPaymentId(donor.getPaymentId());
+        //     existing.setSignature(donor.getSignature());
+        //     existing.setStatus(donor.getPaymentId() != null ? "SUCCESS" : "PENDING");
+
+        //     Donourentity updated = donationRepo.save(existing);
+
+        //     // send mail after successful payment
+        //     try {
+        //         mailService.sendDonationReceipt(
+        //                 safeDecrypt(donor.getEmail(),key),
+        //                 existing.getFirstName() + " " + existing.getLastName(),
+        //                 existing.getAmount(),
+        //                 donor.getPaymentId()
+        //         );
+        //     } catch (Exception e) {
+        //         System.err.println("⚠️ Failed to send donation receipt: " + e.getMessage());
+        //     }
+
+        //     return updated;
+        // }
+  Donourentity existing = donationRepo.findByOrderId(donor.getOrderId()).orElse(null);
 
         if (existing != null) {
-            System.out.println("🟡 Updating existing donor — skipping re-encryption");
-            SecretKeySpec key = AESUtil.deobfuscateKey(donor.getEncKey());
+            System.out.println("🟡 Updating existing donor — using stored encryption key");
 
-            // just update payment info and status
+            SecretKeySpec key = null;
+
+            // ✅ ALWAYS use the DB-stored key, NEVER the incoming donor key
+            try {
+                key = AESUtil.deobfuscateKey(existing.getEncKey());
+            } catch (Exception ex) {
+                System.err.println("⚠️ Could not deobfuscate key: " + ex.getMessage());
+                key = null; // safe fail
+            }
+
+            // 🔄 Update ONLY payment-related fields
             existing.setPaymentId(donor.getPaymentId());
             existing.setSignature(donor.getSignature());
-            existing.setStatus(donor.getPaymentId() != null ? "SUCCESS" : "PENDING");
+            existing.setStatus(
+                    donor.getPaymentId() != null ? "SUCCESS" : "PENDING"
+            );
+            existing.setDonationDate(LocalDateTime.now());
 
             Donourentity updated = donationRepo.save(existing);
 
-            // send mail after successful payment
-            try {
-                mailService.sendDonationReceipt(
-                        safeDecrypt(donor.getEmail(),key),
-                        existing.getFirstName() + " " + existing.getLastName(),
-                        existing.getAmount(),
-                        donor.getPaymentId()
-                );
-            } catch (Exception e) {
-                System.err.println("⚠️ Failed to send donation receipt: " + e.getMessage());
+            // 📧 Send receipt ONLY IF payment succeeded and key is valid
+            if (donor.getPaymentId() != null) {
+                try {
+                    String decryptedEmail = null;
+
+                    if (key != null && existing.getEmail() != null) {
+                        decryptedEmail = AESUtil.decrypt(existing.getEmail(), key);
+                    }
+
+                    if (decryptedEmail != null) {
+                        mailService.sendDonationReceipt(
+                                decryptedEmail,
+                                existing.getFirstName() + " " + existing.getLastName(),
+                                existing.getAmount(),
+                                donor.getPaymentId()
+                        );
+                    } else {
+                        System.out.println("⚠️ Email not sent → missing or undecryptable email/key.");
+                    }
+
+                } catch (Exception e) {
+                    System.err.println("⚠️ Failed to send donation receipt: " + e.getMessage());
+                }
             }
 
             return updated;
         }
-
         // 🟢 New donor (first time)
         System.out.println("🟢 New donor — performing encryption");
 
