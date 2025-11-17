@@ -373,6 +373,11 @@ public ResponseEntity<?> createOrder(@RequestBody Donourentity donor) {
         try {
             String donorId = (String) req.get("donorId");
             int amountRupees = Integer.parseInt(String.valueOf(req.get("amount"))); // must be integer rupees
+System.out.println("🔍 DEBUG keyId = " + keyId);
+System.out.println("🔍 DEBUG keySecret = " + keySecret);
+System.out.println("🔍 DEBUG keyId length = " + (keyId != null ? keyId.length() : 0));
+System.out.println("🔍 DEBUG keySecret length = " + (keySecret != null ? keySecret.length() : 0));
+System.out.println("🔍 DEBUG variablePlanId = " + variablePlanId);
 
             System.out.println("🔵 create-subscription called: donorId=" + donorId + " amount=" + amountRupees);
             System.out.println("🔵 Using plan_id=" + variablePlanId + " key=" + keyId);
@@ -443,4 +448,5 @@ public ResponseEntity<?> createOrder(@RequestBody Donourentity donor) {
 
 
 }
+
 
